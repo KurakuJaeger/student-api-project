@@ -1,12 +1,14 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>REST API Tester Dashboard</title>
+    <!-- Tailwind CSS: Used for utility-first styling without writing separate CSS files -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .method-badge { @apply text-[10px] font-bold px-2 py-1 rounded mr-2 uppercase; }
+        /* Custom styles for the API method badges (GET, POST, etc.) */
+        .method-badge { font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-right: 8px; text-transform: uppercase; }
         .get-bg { background-color: #61affe; color: white; }
         .post-bg { background-color: #49cc90; color: white; }
         .put-bg { background-color: #fca130; color: white; }
@@ -16,7 +18,7 @@
 <body class="bg-slate-100 min-h-screen font-sans text-slate-900">
 
     <div class="max-w-5xl mx-auto p-6">
-        <!-- Header -->
+        <!-- Page Header: Describes the purpose of the application -->
         <header class="mb-8 border-b border-slate-300 pb-6">
             <h1 class="text-3xl font-extrabold text-slate-800">API Method Tester</h1>
             <p class="text-slate-600">Testing the Student Registry Server with modern JS patterns.</p>
@@ -24,10 +26,10 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
-            <!-- Left Column: Actions -->
+            <!-- Left Column: Contains forms to send data to the server (CREATE, UPDATE, DELETE) -->
             <div class="space-y-6">
                 
-                <!-- CREATE (POST) -->
+                <!-- CREATE (POST): Form to add a new student record -->
                 <section class="bg-white p-5 rounded-lg shadow-sm border-l-4 border-green-500">
                     <div class="flex items-center mb-4">
                         <span class="method-badge post-bg">POST</span>
@@ -40,7 +42,7 @@
                     <button onclick="handlePost()" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded font-semibold transition">Execute POST</button>
                 </section>
 
-                <!-- UPDATE (PUT) -->
+                <!-- UPDATE (PUT): Form to modify an existing record based on its unique ID -->
                 <section class="bg-white p-5 rounded-lg shadow-sm border-l-4 border-orange-400">
                     <div class="flex items-center mb-4">
                         <span class="method-badge put-bg">PUT</span>
@@ -56,7 +58,7 @@
                     <button onclick="handlePut()" class="w-full bg-orange-400 hover:bg-orange-500 text-white py-2 rounded font-semibold transition">Execute PUT</button>
                 </section>
 
-                <!-- DELETE -->
+                <!-- DELETE: Form to remove a record from the database using its ID -->
                 <section class="bg-white p-5 rounded-lg shadow-sm border-l-4 border-red-500">
                     <div class="flex items-center mb-4">
                         <span class="method-badge delete-bg">DELETE</span>
@@ -68,10 +70,10 @@
 
             </div>
 
-            <!-- Right Column: Results/Server State -->
+            <!-- Right Column: Displays the current data retrieved from the server -->
             <div class="space-y-6">
                 
-                <!-- READ (GET) -->
+                <!-- READ (GET): Lists all students currently stored in the server memory -->
                 <section class="bg-white p-5 rounded-lg shadow-sm border-t-4 border-blue-500 h-full flex flex-col">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center">
@@ -81,10 +83,12 @@
                         <button onclick="fetchData()" class="text-blue-500 text-sm hover:underline">Refresh View</button>
                     </div>
                     
+                    <!-- Notification area for success/error messages -->
                     <div id="statusLog" class="mb-4 text-xs font-mono p-2 bg-slate-900 text-green-400 rounded hidden"></div>
 
+                    <!-- Container where student data will be dynamically injected by JavaScript -->
                     <div id="studentDisplay" class="flex-1 space-y-2 overflow-y-auto max-h-[500px]">
-                        <!-- List Items -->
+                        <!-- Student list items are generated here -->
                     </div>
                 </section>
 
@@ -93,28 +97,30 @@
     </div>
 
     <script>
+        // The URL where your Express server is running
         const API_URL = 'http://localhost:3000/api/students';
 
-        // Helper to log actions to the mini-console
+        // Helper: Displays a brief message in the dark console box to show what happened
         function logAction(msg) {
             const log = document.getElementById('statusLog');
             log.innerText = `> ${msg}`;
             log.classList.remove('hidden');
-            setTimeout(() => log.classList.add('hidden'), 3000);
+            setTimeout(() => log.classList.add('hidden'), 3000); // Hide after 3 seconds
         }
 
-        // GET: Fetch and display data
+        // GET: Requests the student list from the server and updates the HTML view
         async function fetchData() {
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
                 
-                // Using Nullish Coalescing and Optional Chaining to handle empty/null data safely
+                // Use Optional Chaining (?.) to prevent errors if data is missing
                 const students = data?.map(s => s) ?? [];
                 
                 const container = document.getElementById('studentDisplay');
-                container.innerHTML = '';
+                container.innerHTML = ''; // Clear the list before re-populating
 
+                // Loop through each student and create their UI element
                 students.forEach(s => {
                     const el = document.createElement('div');
                     el.className = "flex justify-between items-center p-3 bg-slate-50 border border-slate-200 rounded hover:border-blue-300 transition";
@@ -136,7 +142,7 @@
             }
         }
 
-        // POST: Create
+        // POST: Sends new student data to the server to create a record
         async function handlePost() {
             const name = document.getElementById('postName').value;
             const course = document.getElementById('postCourse').value;
@@ -149,11 +155,11 @@
                 });
                 const result = await res.json();
                 logAction(`POST Successful: Created Student #${result?.id}`);
-                fetchData(); // Sync view
+                fetchData(); // Refresh the list to show the new student
             } catch (e) { logAction("POST Error"); }
         }
 
-        // PUT: Update
+        // PUT: Sends updated data to the server for a specific student ID
         async function handlePut() {
             const id = document.getElementById('putId').value;
             const name = document.getElementById('putName').value;
@@ -165,17 +171,18 @@
                 const res = await fetch(`${API_URL}/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
+                    // If an input is empty, we send 'undefined' so the server keeps the old value
                     body: JSON.stringify({ name: name || undefined, course: course || undefined })
                 });
                 
                 if (res.status === 404) return logAction("Error: Student not found (404)");
                 
                 logAction(`PUT Successful: Updated Student #${id}`);
-                fetchData();
+                fetchData(); // Refresh the list to show updates
             } catch (e) { logAction("PUT Error"); }
         }
 
-        // DELETE: Remove
+        // DELETE: Tells the server to remove a student based on their ID
         async function handleDelete() {
             const id = document.getElementById('deleteId').value;
             if (!id) return logAction("Error: Missing ID for DELETE");
@@ -185,12 +192,13 @@
                 if (res.status === 404) return logAction("Error: Student not found (404)");
 
                 logAction(`DELETE Successful: Removed Student #${id}`);
-                fetchData();
+                fetchData(); // Refresh the list to remove the deleted student
             } catch (e) { logAction("DELETE Error"); }
         }
 
-        // Initial fetch on load
+        // Automatically fetch data when the page first loads
         window.onload = fetchData;
     </script>
 </body>
+</html>
 </html>
