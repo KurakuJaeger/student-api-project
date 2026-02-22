@@ -1,11 +1,11 @@
 const express = require('express');
 const cors = require('cors'); // Required to allow the frontend to talk to the backend
-const app = express();
+const server = express();
 const PORT = 3000;
 
 // Middleware
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Enable parsing of JSON in request bodies
+server.use(cors()); // Enable Cross-Origin Resource Sharing
+server.use(express.json()); // Enable parsing of JSON in request bodies
 
 // 1. Data Store (In-Memory)
 // This simulates a database. It holds multiple records.
@@ -15,14 +15,29 @@ let students = [
 ];
 
 // 2. GET Endpoint: Retrieve all students (READ)
-app.get('/api/students', (req, res) => {
+server.get('/api/students', (req, res) => {
     console.log('GET /api/students - Fetching student list');
     // Using optional chaining as a best practice, though students is defined here
     res.status(200).json(students?.map(s => s) ?? []);
 });
 
-// 3. POST Endpoint: Create a new student (CREATE)
-app.post('/api/students', (req, res) => {
+// 3: GET Endpoint: Retrieve a specific student by ID
+server.get('/api/students/:id', (req, res) => {
+    const id = parseInt(req.params?.id);
+    const student = students.find(s => s.id === id);
+
+    if (!student) {
+        console.log(`GET /api/students/${id} - Not Found`);
+        return res.status(404).json({ error: "Student not found" });
+    }
+
+    console.log(`GET /api/students/${id} - Found: ${student.name}`);
+    res.status(200).json(student);
+});
+
+
+// 4. POST Endpoint: Create a new student (CREATE)
+server.post('/api/students', (req, res) => {
     // Optional chaining and nullish coalescing for safer input handling
     const name = req.body?.name ?? "Unknown Student";
     const course = req.body?.course ?? "General Education";
@@ -38,8 +53,8 @@ app.post('/api/students', (req, res) => {
     res.status(201).json(newStudent);
 });
 
-// 4. PUT Endpoint: Update an existing student (UPDATE)
-app.put('/api/students/:id', (req, res) => {
+// 5. PUT Endpoint: Update an existing student (UPDATE)
+server.put('/api/students/:id', (req, res) => {
     const id = parseInt(req.params?.id);
     const index = students.findIndex(s => s.id === id);
 
@@ -55,8 +70,8 @@ app.put('/api/students/:id', (req, res) => {
     res.status(200).json(students[index]);
 });
 
-// 5. DELETE Endpoint: Remove a student (DELETE)
-app.delete('/api/students/:id', (req, res) => {
+// 6. DELETE Endpoint: Remove a student (DELETE)
+server.delete('/api/students/:id', (req, res) => {
     const id = parseInt(req.params?.id);
     const initialLength = students.length;
     
@@ -72,7 +87,7 @@ app.delete('/api/students/:id', (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`========================================`);
     console.log(`API Server running at http://localhost:${PORT}`);
     console.log(`Endpoints available:`);
