@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Tester Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .method-badge { @apply text-[10px] font-bold px-2 py-1 rounded mr-2 uppercase; }
+        .get-bg { background-color: #61affe; color: white; }
+        .post-bg { background-color: #49cc90; color: white; }
+        .put-bg { background-color: #fca130; color: white; }
+        .delete-bg { background-color: #f93e3e; color: white; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-900">
+
+    <div class="max-w-5xl mx-auto p-6">
+        <!-- Header -->
+        <header class="mb-8 border-b border-slate-300 pb-6">
+            <h1 class="text-3xl font-extrabold text-slate-800">API Method Tester</h1>
+            <p class="text-slate-600">Testing the Student Registry Server with modern JS patterns.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Left Column: Actions -->
+            <div class="space-y-6">
+                
+                <!-- CREATE (POST) -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border-l-4 border-green-500">
+                    <div class="flex items-center mb-4">
+                        <span class="method-badge post-bg">POST</span>
+                        <h2 class="font-bold text-lg">Create Student</h2>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <input id="postName" type="text" placeholder="Name" class="p-2 border rounded text-sm">
+                        <input id="postCourse" type="text" placeholder="Course" class="p-2 border rounded text-sm">
+                    </div>
+                    <button onclick="handlePost()" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded font-semibold transition">Execute POST</button>
+                </section>
+
+                <!-- UPDATE (PUT) -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border-l-4 border-orange-400">
+                    <div class="flex items-center mb-4">
+                        <span class="method-badge put-bg">PUT</span>
+                        <h2 class="font-bold text-lg">Update Student</h2>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 mb-3">
+                        <input id="putId" type="number" placeholder="Student ID to Update" class="p-2 border rounded text-sm bg-slate-50">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input id="putName" type="text" placeholder="New Name" class="p-2 border rounded text-sm">
+                            <input id="putCourse" type="text" placeholder="New Course" class="p-2 border rounded text-sm">
+                        </div>
+                    </div>
+                    <button onclick="handlePut()" class="w-full bg-orange-400 hover:bg-orange-500 text-white py-2 rounded font-semibold transition">Execute PUT</button>
+                </section>
+
+                <!-- DELETE -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border-l-4 border-red-500">
+                    <div class="flex items-center mb-4">
+                        <span class="method-badge delete-bg">DELETE</span>
+                        <h2 class="font-bold text-lg">Remove Student</h2>
+                    </div>
+                    <input id="deleteId" type="number" placeholder="Enter Student ID" class="w-full p-2 border rounded text-sm mb-3 bg-slate-50">
+                    <button onclick="handleDelete()" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded font-semibold transition">Execute DELETE</button>
+                </section>
+
+            </div>
+
+            <!-- Right Column: Results/Server State -->
+            <div class="space-y-6">
+                
+                <!-- READ (GET) -->
+                <section class="bg-white p-5 rounded-lg shadow-sm border-t-4 border-blue-500 h-full flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <span class="method-badge get-bg">GET</span>
+                            <h2 class="font-bold text-lg">Server State</h2>
+                        </div>
+                        <button onclick="fetchData()" class="text-blue-500 text-sm hover:underline">Refresh View</button>
+                    </div>
+                    
+                    <div id="statusLog" class="mb-4 text-xs font-mono p-2 bg-slate-900 text-green-400 rounded hidden"></div>
+
+                    <div id="studentDisplay" class="flex-1 space-y-2 overflow-y-auto max-h-[500px]">
+                        <!-- List Items -->
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/students';
+
+        // Helper to log actions to the mini-console
+        function logAction(msg) {
+            const log = document.getElementById('statusLog');
+            log.innerText = `> ${msg}`;
+            log.classList.remove('hidden');
+            setTimeout(() => log.classList.add('hidden'), 3000);
+        }
+
+        // GET: Fetch and display data
+        async function fetchData() {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                
+                // Using Nullish Coalescing and Optional Chaining to handle empty/null data safely
+                const students = data?.map(s => s) ?? [];
+                
+                const container = document.getElementById('studentDisplay');
+                container.innerHTML = '';
+
+                students.forEach(s => {
+                    const el = document.createElement('div');
+                    el.className = "flex justify-between items-center p-3 bg-slate-50 border border-slate-200 rounded hover:border-blue-300 transition";
+                    el.innerHTML = `
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-mono">ID: ${s?.id ?? 'N/A'}</span>
+                            <div class="font-bold text-slate-700">${s?.name ?? 'Unknown'}</div>
+                        </div>
+                        <div class="text-xs px-2 py-1 bg-slate-200 rounded text-slate-600 font-medium">
+                            ${s?.course ?? 'Unassigned'}
+                        </div>
+                    `;
+                    container.appendChild(el);
+                });
+                logAction("GET Successful: Syncing with server state.");
+            } catch (e) {
+                console.error(e);
+                document.getElementById('studentDisplay').innerHTML = `<p class="text-red-500 text-sm italic">Failed to connect to server. Ensure server.js is running.</p>`;
+            }
+        }
+
+        // POST: Create
+        async function handlePost() {
+            const name = document.getElementById('postName').value;
+            const course = document.getElementById('postCourse').value;
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, course })
+                });
+                const result = await res.json();
+                logAction(`POST Successful: Created Student #${result?.id}`);
+                fetchData(); // Sync view
+            } catch (e) { logAction("POST Error"); }
+        }
+
+        // PUT: Update
+        async function handlePut() {
+            const id = document.getElementById('putId').value;
+            const name = document.getElementById('putName').value;
+            const course = document.getElementById('putCourse').value;
+
+            if (!id) return logAction("Error: Missing ID for PUT");
+
+            try {
+                const res = await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name || undefined, course: course || undefined })
+                });
+                
+                if (res.status === 404) return logAction("Error: Student not found (404)");
+                
+                logAction(`PUT Successful: Updated Student #${id}`);
+                fetchData();
+            } catch (e) { logAction("PUT Error"); }
+        }
+
+        // DELETE: Remove
+        async function handleDelete() {
+            const id = document.getElementById('deleteId').value;
+            if (!id) return logAction("Error: Missing ID for DELETE");
+
+            try {
+                const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                if (res.status === 404) return logAction("Error: Student not found (404)");
+
+                logAction(`DELETE Successful: Removed Student #${id}`);
+                fetchData();
+            } catch (e) { logAction("DELETE Error"); }
+        }
+
+        // Initial fetch on load
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
