@@ -39,13 +39,3 @@ curl -X PUT http://localhost:3000/api/students/1 \
 This command deletes the student record associated with the ID provided in the URL.
 
 curl -X DELETE http://localhost:3000/api/students/2
-
-
-Tips for Terminal Testing:
-
-Prettify Output: If you have jq installed, you can pipe the output to make the JSON readable:
-curl http://localhost:3000/api/students | jq
-
-Verbosity: Add -v to any command (e.g., curl -v ...) to see the full HTTP headers, which is very helpful for debugging.
-
-Windows PowerShell Note: If you are using PowerShell, you might need to use Invoke-RestMethod or ensure curl isn't aliased to something else. The commands above are standard for Bash/CMD/Terminal.
